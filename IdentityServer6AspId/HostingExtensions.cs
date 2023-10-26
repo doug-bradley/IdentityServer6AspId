@@ -1,6 +1,10 @@
 using Duende.IdentityServer;
+using Duende.IdentityServer.Configuration;
+using Duende.IdentityServer.Models;
+using Duende.IdentityServer.Services;
 using IdentityServer6AspId.Data;
 using IdentityServer6AspId.Models;
+using IdentityServer6AspId.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -14,14 +18,28 @@ namespace IdentityServer6AspId
 			var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
 			var connectionString = builder.Configuration.GetConnectionString("LocalIdentity");
 
+			builder.Services.AddCors(options =>
+			{
+				options.AddPolicy("AllowSpecificOrigin",
+					b =>
+					{
+						b.WithOrigins("http://localhost:5173") // Replace with your Vue.js application's origin
+							.AllowAnyHeader()
+							.AllowAnyMethod()
+							.AllowCredentials();
+					});
+			});
+
 			builder.Services.AddRazorPages();
 
-			builder.Services.AddDbContext<ApplicationDbContext>(options =>
-				options.UseSqlServer(connectionString));
+			builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
 			builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();
+
+			builder.Services.AddTransient<IUserService, UserService>();
+			//builder.Services.AddTransient<IProfileService, CustomProfileService>();
 
 			builder.Services
 				.AddIdentityServer(options =>
@@ -30,37 +48,24 @@ namespace IdentityServer6AspId
 					options.Events.RaiseInformationEvents = true;
 					options.Events.RaiseFailureEvents = true;
 					options.Events.RaiseSuccessEvents = true;
-
+					options.Csp = new CspOptions() { Level = CspLevel.One };
 					// see https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/
 					options.EmitStaticAudienceClaim = true;
 				})
 
 				.AddConfigurationStore(options =>
 				{
-					//ConfigurationDbContext: used for configuration data such as clients, resources, and scopes
-					options.ConfigureDbContext = b => b.UseSqlServer(connectionString,
-						sql => sql.MigrationsAssembly(migrationsAssembly));
+					options.ConfigureDbContext = b => b.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly));
 				})
 				.AddOperationalStore(options =>
 				{
-					//PersistedGrantDbContext: used for dynamic operational data such as authorization codes and refresh tokens
-					options.ConfigureDbContext = b => b.UseSqlServer(connectionString,
-						sql => sql.MigrationsAssembly(migrationsAssembly));
+					options.ConfigureDbContext = b => b.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly));
 				})
-				.AddAspNetIdentity<ApplicationUser>();
+				.AddAspNetIdentity<ApplicationUser>()
+				.AddProfileService<CustomProfileService>();
 
-			builder.Services.AddAuthentication()
-				.AddGoogle(options =>
-				{
-					options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
-
-					// register your IdentityServer with Google at https://console.developers.google.com
-					// enable the Google+ API
-					// set the redirect URI to https://localhost:5001/signin-google
-					options.ClientId = "copy client ID from Google here";
-					options.ClientSecret = "copy client secret from Google here";
-				});
-
+			builder.Services.AddGoogle();
+			builder.Services.AddTransient<IProfileService, CustomProfileService>();
 			return builder.Build();
 		}
 
@@ -75,6 +80,14 @@ namespace IdentityServer6AspId
 
 			app.UseStaticFiles();
 			app.UseRouting();
+			app.UseCors("AllowSpecificOrigin"); // Use the CORS policy
+
+			app.Use(async (context, next) =>
+			{
+				context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; connect-src 'self' wss://localhost:44312;");
+				await next();
+			});
+
 			app.UseIdentityServer();
 			app.UseAuthorization();
 
@@ -82,6 +95,21 @@ namespace IdentityServer6AspId
 				.RequireAuthorization();
 
 			return app;
+		}
+
+		public static void AddGoogle(this IServiceCollection services)
+		{
+			services.AddAuthentication()
+				.AddGoogle(options =>
+				{
+					options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
+
+					// register your IdentityServer with Google at https://console.developers.google.com
+					// enable the Google+ API
+					// set the redirect URI to https://localhost:5001/signin-google
+					options.ClientId = "copy client ID from Google here";
+					options.ClientSecret = "copy client secret from Google here";
+				});
 		}
 	}
 }

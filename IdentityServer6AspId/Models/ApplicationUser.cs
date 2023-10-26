@@ -9,5 +9,8 @@ namespace IdentityServer6AspId.Models
 	// Add profile data for application users by adding properties to the ApplicationUser class
 	public class ApplicationUser : IdentityUser
 	{
+		public string TenantId { get; set; }
+		public string Currency { get; set; }
+		public string TimeZone { get; set; }
 	}
 }

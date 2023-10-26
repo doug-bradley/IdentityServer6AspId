@@ -1,4 +1,5 @@
 ﻿using IdentityServer6AspId;
+using IdentityServer6AspId.Data;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -19,6 +20,12 @@ try
 	var app = builder
 		.ConfigureServices()
 		.ConfigurePipeline();
+
+	//SeedData.SeedUsers(app);
+	//SeedData.SeedClients(app);
+	//SeedData.SeedResources(app);
+	//SeedData.SeedIdentityResources(app);
+
 
 	app.Run();
 }
