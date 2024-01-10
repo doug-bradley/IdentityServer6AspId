@@ -5,6 +5,7 @@ using Duende.IdentityServer.Services;
 using IdentityServer6AspId.Data;
 using IdentityServer6AspId.Models;
 using IdentityServer6AspId.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -23,7 +24,7 @@ namespace IdentityServer6AspId
 				options.AddPolicy("AllowSpecificOrigin",
 					b =>
 					{
-						b.WithOrigins("http://localhost:5173") // Replace with your Vue.js application's origin
+						b.WithOrigins("http://localhost:1234") // Replace with your Vue.js application's origin
 							.AllowAnyHeader()
 							.AllowAnyMethod()
 							.AllowCredentials();
@@ -39,7 +40,6 @@ namespace IdentityServer6AspId
 				.AddDefaultTokenProviders();
 
 			builder.Services.AddTransient<IUserService, UserService>();
-			//builder.Services.AddTransient<IProfileService, CustomProfileService>();
 
 			builder.Services
 				.AddIdentityServer(options =>
@@ -52,7 +52,7 @@ namespace IdentityServer6AspId
 					// see https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/
 					options.EmitStaticAudienceClaim = true;
 				})
-
+                
 				.AddConfigurationStore(options =>
 				{
 					options.ConfigureDbContext = b => b.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly));
@@ -62,10 +62,24 @@ namespace IdentityServer6AspId
 					options.ConfigureDbContext = b => b.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly));
 				})
 				.AddAspNetIdentity<ApplicationUser>()
-				.AddProfileService<CustomProfileService>();
+				.AddProfileService<CustomProfileService>()
+                ;
+   //         builder.Services.AddAuthentication().AddOpenIdConnect("oidc", options =>
+			//{
+
+			//	options.Scope.Clear();
+			//	options.Scope.Add("openid");
+			//	options.Scope.Add("profile");
+			//	options.Scope.Add("offline_access");
+			//	options.Scope.Add("api1");
+			//	options.Scope.Add("tenant_id");
+
+			//	options.GetClaimsFromUserInfoEndpoint = true;
+			//	options.ClaimActions.MapUniqueJsonKey("tenant_id", "tenant_id");
+			//});
 
 			builder.Services.AddGoogle();
-			builder.Services.AddTransient<IProfileService, CustomProfileService>();
+
 			return builder.Build();
 		}
 
@@ -84,16 +98,13 @@ namespace IdentityServer6AspId
 
 			app.Use(async (context, next) =>
 			{
-				context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; connect-src 'self' wss://localhost:44312;");
+				context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; connect-src 'self' wss://localhost:*; script-src https://localhost:5001 'self'  'sha256-fa5rxHhZ799izGRP38+h4ud5QXNT0SFaFlh4eqDumBI=';");
 				await next();
 			});
-
+			
 			app.UseIdentityServer();
 			app.UseAuthorization();
-
-			app.MapRazorPages()
-				.RequireAuthorization();
-
+			app.MapRazorPages().RequireAuthorization();
 			return app;
 		}
 

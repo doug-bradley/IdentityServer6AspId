@@ -106,31 +106,61 @@ namespace IdentityServer6AspId.Data
 			var clientExists = context.Clients.Any(i => i.ClientId == clientId);
 
 			if (clientExists)
-			{
-				Log.Information("Client already exists");
-				return;
+            {
+                var client = context.Clients.First(i => i.ClientId == clientId);
+                context.Clients.Remove(client);
+                context.SaveChanges();
+				
+                Log.Information("Client already exists");
+				
 			}
 
+            var clientUri = "http://localhost:3000";
+			
+			
 			var newClient = new Client
 			{
+				ClientUri = $"{clientUri}",
 				ClientId = clientId,
 				ClientName = "Multi-Tenant Procurement App",
 				AllowedGrantTypes = GrantTypes.Code,
 				RequirePkce = true,
-				ClientClaimsPrefix = "tenant_",
-				AllowedScopes = { "openid", "profile", "api1", "custom" },
-				AllowedCorsOrigins = { "http://localhost:5173" },
+				//ClientClaimsPrefix = "tenant_",
+				AllowedScopes = { "openid", "profile", "email", "tenant_id", "role", "permission", "department" },
+				AllowedCorsOrigins = { $"{clientUri}" },
 				AccessTokenLifetime = 3600,
 				RefreshTokenUsage = TokenUsage.OneTimeOnly,
-				RedirectUris = { "http://localhost:5173/callback" },
-				PostLogoutRedirectUris = { "http://localhost:5173/" },
+				RedirectUris = { $"{clientUri}", $"{clientUri}/callback", $"{clientUri}/callback-popup", $"{clientUri}/silent-renew"},
+				PostLogoutRedirectUris = { $"{clientUri}/signout", $"{clientUri}/signout-popup" },
 				RequireClientSecret = false,
 				RequireConsent = false,
 				AllowOfflineAccess = true,
 				AlwaysIncludeUserClaimsInIdToken = true,
 				AlwaysSendClientClaims = true
 			};
+			
 
+			//var newClient = new Client
+			//{
+			//	ClientUri = "http://localhost:3000",
+			//	ClientId = clientId,
+			//	ClientName = "Multi-Tenant Procurement App",
+			//	AllowedGrantTypes = GrantTypes.Code,
+			//	RequirePkce = true,
+			//	//ClientClaimsPrefix = "tenant_",
+			//	AllowedScopes = { "openid", "profile", "email", "tenant_id", "role", "permission", "department" },
+			//	AllowedCorsOrigins = { "http://localhost:3000" },
+			//	AccessTokenLifetime = 3600,
+			//	RefreshTokenUsage = TokenUsage.OneTimeOnly,
+			//	RedirectUris = { "http://localhost:3000/api/auth/callback/duende-identityserver6" },
+			//	PostLogoutRedirectUris = { "http://localhost:3000/" },
+			//	RequireClientSecret = false,
+			//	RequireConsent = false,
+			//	AllowOfflineAccess = true,
+			//	AlwaysIncludeUserClaimsInIdToken = true,
+			//	AlwaysSendClientClaims = true
+			//};
+			
 			context.Clients.Add(newClient.ToEntity());
 			context.SaveChanges();
 		}
@@ -139,12 +169,18 @@ namespace IdentityServer6AspId.Data
 		{
 			using var scope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
 			var context = scope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
+			
 			const string resourceName = "procurement-api";
+			
 			var resourceExists = context.ApiResources.Any(i => i.Name == resourceName);
 			if (resourceExists)
-			{
+            {
+                var resource = context.ApiResources.First(i => i.Name == resourceName);
+				context.ApiResources.Remove(resource);
+                context.SaveChanges();
+				
 				Log.Information("Resource already exists");
-				return;
+				
 			}
 			
 
@@ -153,13 +189,13 @@ namespace IdentityServer6AspId.Data
 				Name = resourceName,
 				DisplayName = "Procurement API",
 				Description = "API for procurement operations",
-				UserClaims = new List<string> { "role", "tenant_id", "name", "currency", "timezone" },
+				UserClaims = new List<string> { "tenant_id", "role", "permission", "department" },
 				Scopes = new List<string>
 				{
 					"procurement.read",
 					"procurement.write"
-				},
-				ApiSecrets = new List<Secret> { new Secret("apiSecret".Sha256()) }
+                },
+				ApiSecrets = new List<Secret> { new("apiSecret".Sha256()) }
 			};
 
 			context.ApiResources.Add(apiResource.ToEntity());
@@ -167,8 +203,10 @@ namespace IdentityServer6AspId.Data
 			// Add the associated scopes
 			var apiScopes = new List<ApiScope>
 			{
-				new ApiScope("procurement.read", "Read Access for Procurement API"),
-				new ApiScope("procurement.write", "Write Access for Procurement API")
+				new("procurement.read", "Read Access for Procurement API"),
+				new("procurement.write", "Write Access for Procurement API"),
+                new("offline_access")
+                , new("email")
 			};
 
 			foreach (var apiScope in apiScopes.Where(apiScope => context.ApiScopes.Any(s => s.Name == apiScope.Name) == false))
@@ -187,7 +225,8 @@ namespace IdentityServer6AspId.Data
 			// Check if any IdentityResources already exist
 			if (context.IdentityResources.Any())
 			{
-				return;
+				context.IdentityResources.RemoveRange(context.IdentityResources);
+                context.SaveChanges();
 			}
 
 			// Define the IdentityResources
@@ -195,22 +234,11 @@ namespace IdentityServer6AspId.Data
 			{
 				new IdentityResources.OpenId(),
 				new IdentityResources.Profile(),
-				new IdentityResource
-				{
-					Name = "custom",
-					DisplayName = "Custom profile",
-					UserClaims = new List<string>
-					{
-						"tenant_id",
-						"currency",
-						"timezone",
-						"department"
-					}
-				}
-				//new IdentityResources.Email(),
-				//new IdentityResource("roles", new[] { "role" }),
-				//new IdentityResource("tenant", new[] { "tenant_id" }),
-			};
+                new("tenant_id", new [] { "tenant_id" }),
+                new("role", new [] { "role" }),
+                new("permission", new [] { "permission" }),
+                new("department", new [] { "department" })
+            };
 			
 
 			// Add the IdentityResources to the DbContext

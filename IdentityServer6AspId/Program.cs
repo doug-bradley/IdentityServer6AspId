@@ -1,9 +1,17 @@
 ﻿using IdentityServer6AspId;
 using IdentityServer6AspId.Data;
 using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.SystemConsole.Themes;
 
 Log.Logger = new LoggerConfiguration()
-	.WriteTo.Console()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.AspNetCore.Authentication", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}", theme: AnsiConsoleTheme.Code)
 	.CreateBootstrapLogger();
 
 Log.Information("Starting up");
@@ -17,14 +25,15 @@ try
 		.Enrich.FromLogContext()
 		.ReadFrom.Configuration(ctx.Configuration));
 
-	var app = builder
+	
+    var app = builder
 		.ConfigureServices()
 		.ConfigurePipeline();
 
-	//SeedData.SeedUsers(app);
-	//SeedData.SeedClients(app);
-	//SeedData.SeedResources(app);
-	//SeedData.SeedIdentityResources(app);
+	SeedData.SeedUsers(app);
+	SeedData.SeedClients(app);
+	SeedData.SeedResources(app);
+	SeedData.SeedIdentityResources(app);
 
 
 	app.Run();
