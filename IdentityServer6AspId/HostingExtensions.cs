@@ -1,11 +1,9 @@
 using Duende.IdentityServer;
 using Duende.IdentityServer.Configuration;
 using Duende.IdentityServer.Models;
-using Duende.IdentityServer.Services;
 using IdentityServer6AspId.Data;
 using IdentityServer6AspId.Models;
 using IdentityServer6AspId.Services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
@@ -63,21 +61,8 @@ namespace IdentityServer6AspId
 				})
 				.AddAspNetIdentity<ApplicationUser>()
 				.AddProfileService<CustomProfileService>()
+                .AddAuthorizeInteractionResponseGenerator<TenantInteractionResponseGenerator>()
                 ;
-   //         builder.Services.AddAuthentication().AddOpenIdConnect("oidc", options =>
-			//{
-
-			//	options.Scope.Clear();
-			//	options.Scope.Add("openid");
-			//	options.Scope.Add("profile");
-			//	options.Scope.Add("offline_access");
-			//	options.Scope.Add("api1");
-			//	options.Scope.Add("tenant_id");
-
-			//	options.GetClaimsFromUserInfoEndpoint = true;
-			//	options.ClaimActions.MapUniqueJsonKey("tenant_id", "tenant_id");
-			//});
-
 			builder.Services.AddGoogle();
 
 			return builder.Build();

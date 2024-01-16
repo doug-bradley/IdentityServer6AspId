@@ -43,20 +43,21 @@ namespace IdentityServer6AspId.Pages.Login
 			_events = events;
 		}
 
-		public async Task<IActionResult> OnGet(string returnUrl)
-		{
-			await BuildModelAsync(returnUrl);
 
-			if (View.IsExternalLoginOnly)
-			{
-				// we only have one option for logging in and it's an external provider
-				return RedirectToPage("/ExternalLogin/Challenge", new { scheme = View.ExternalLoginScheme, returnUrl });
-			}
+        public async Task<IActionResult> OnGet(string returnUrl)
+        {
+            await BuildModelAsync(returnUrl);
 
-			return Page();
-		}
+            if (View.IsExternalLoginOnly)
+            {
+                // we only have one option for logging in and it's an external provider
+                return RedirectToPage("/ExternalLogin/Challenge", new { scheme = View.ExternalLoginScheme, returnUrl });
+            }
 
-		public async Task<IActionResult> OnPost()
+            return Page();
+        }
+
+        public async Task<IActionResult> OnPost()
 		{
 			// check if we are in the context of an authorization request
 			var context = await _interaction.GetAuthorizationContextAsync(Input.ReturnUrl);

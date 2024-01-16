@@ -29,15 +29,16 @@ namespace IdentityServer6AspId.Services
 
 			// Get your user data however you've stored it
 			var user = await _userService.GetUserByIdAsync(userId);
-            var userDepartment = "Procurement";
+            const string userDepartment = "Procurement";
 			var userRoles = new List<string>() { "ProcurementManager", "Approver"};
 			var userPermissions = new List<string>() { "create-order", "approve-order", "view-all-orders"};
-			
+
+            var cl = context.Subject.Claims.First(i => i.Type == "tenant_id");
 			
 			// Create a list of claims for the identity token and/or access token
 			var claims = new List<Claim>
 			{
-				new("tenant_id", user.TenantId),
+				new("tenant_id", cl.Value),
 				new ("currency", "USD"),
 				new ("timezone", "PST"),
                 new ("department", userDepartment)

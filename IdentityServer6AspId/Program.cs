@@ -30,10 +30,10 @@ try
 		.ConfigureServices()
 		.ConfigurePipeline();
 
-	SeedData.SeedUsers(app);
-	SeedData.SeedClients(app);
-	SeedData.SeedResources(app);
-	SeedData.SeedIdentityResources(app);
+	//SeedData.SeedUsers(app);
+	//SeedData.SeedClients(app);
+	//SeedData.SeedResources(app);
+	//SeedData.SeedIdentityResources(app);
 
 
 	app.Run();

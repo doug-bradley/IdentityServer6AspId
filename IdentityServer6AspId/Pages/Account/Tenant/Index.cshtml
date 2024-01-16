@@ -1,0 +1,41 @@
+﻿@page
+@inject ApplicationDbContext DbContext
+@using IdentityServer6AspId.Data
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model IdentityServer6AspId.Pages.Account.Tenant.IndexModel
+@{
+}
+
+<div class="tenant-page">
+    <div class="lead">
+        <h1>Tenant</h1>
+        <p>Choose tenant</p>
+    </div>
+
+    <partial name="_ValidationSummary" />
+
+
+    <div class="col-sm-6">
+        <div class="card">
+            <div class="card-header">
+                <h2>Select tenant</h2>
+            </div>
+
+            <div class="card-body">
+                <form asp-page="/Account/Tenant/Index">
+                    <input type="hidden" asp-for="Input.ReturnUrl" />
+
+                    <div class="form-group">
+                        <select asp-for="SelectedItemId" asp-items="Model.Tenants">
+                            <option value="">Please select a tenant</option>
+                        </select>
+                    </div>
+
+                            
+                    <button class="btn btn-primary" name="Input.Button" value="login">Login</button>
+                    <button class="btn btn-secondary" name="Input.Button" value="cancel">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
