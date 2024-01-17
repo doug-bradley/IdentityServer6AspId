@@ -33,21 +33,34 @@ namespace IdentityServer6AspId.Services
 			var userRoles = new List<string>() { "ProcurementManager", "Approver"};
 			var userPermissions = new List<string>() { "create-order", "approve-order", "view-all-orders"};
 
-            var cl = context.Subject.Claims.First(i => i.Type == "tenant_id");
-			
-			// Create a list of claims for the identity token and/or access token
-			var claims = new List<Claim>
-			{
-				new("tenant_id", cl.Value),
-				new ("currency", "USD"),
-				new ("timezone", "PST"),
-                new ("department", userDepartment)
-			};
+            try
+            {
+                var cl = context.Subject.Claims.FirstOrDefault(i => i.Type == "tenant_id");
 
-            claims.AddRange(userRoles.Select(r => new Claim(JwtClaimTypes.Role, r)));
-            claims.AddRange(userPermissions.Select(p => new Claim("permission", p)));
+                if (cl == null)
+                {
+					return;
+                }
+                // Create a list of claims for the identity token and/or access token
+                var claims = new List<Claim>
+                {
+                    new("tenant_id", cl.Value),
+                    new("currency", "USD"),
+                    new("timezone", "PST"),
+                    new("department", userDepartment)
+                };
 
-            context.AddRequestedClaims(claims);
+                claims.AddRange(userRoles.Select(r => new Claim(JwtClaimTypes.Role, r)));
+                claims.AddRange(userPermissions.Select(p => new Claim("permission", p)));
+
+                context.AddRequestedClaims(claims);
+
+            }
+            catch (Exception ex)
+            {
+                var test = ex;
+				
+            }
 
         }
 
