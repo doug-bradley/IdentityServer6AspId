@@ -4,8 +4,12 @@ using Duende.IdentityServer.Models;
 using IdentityServer6AspId.Data;
 using IdentityServer6AspId.Models;
 using IdentityServer6AspId.Services;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 
 namespace IdentityServer6AspId
@@ -31,12 +35,14 @@ namespace IdentityServer6AspId
 
 			builder.Services.AddRazorPages();
 
+
 			builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
 			builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();
 
+            builder.Services.AddSingleton<IEmailSender, EmailSender>();
 			builder.Services.AddTransient<IUserService, UserService>();
 
 			builder.Services
@@ -50,7 +56,6 @@ namespace IdentityServer6AspId
 					// see https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/
 					options.EmitStaticAudienceClaim = true;
 				})
-                
 				.AddConfigurationStore(options =>
 				{
 					options.ConfigureDbContext = b => b.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(migrationsAssembly));
@@ -61,9 +66,11 @@ namespace IdentityServer6AspId
 				})
 				.AddAspNetIdentity<ApplicationUser>()
 				.AddProfileService<CustomProfileService>()
-                .AddAuthorizeInteractionResponseGenerator<TenantInteractionResponseGenerator>()
-                ;
-			builder.Services.AddGoogle();
+                .AddAuthorizeInteractionResponseGenerator<TenantInteractionResponseGenerator>();
+
+            builder.Services.AddAAD();
+           
+            builder.Services.AddGoogle();
 
 			return builder.Build();
 		}
@@ -93,7 +100,34 @@ namespace IdentityServer6AspId
 			return app;
 		}
 
-		public static void AddGoogle(this IServiceCollection services)
+
+        public static void AddAAD(this IServiceCollection services)
+        {
+            services.AddAuthentication()
+                .AddOpenIdConnect("AAD", "Login with Microsoft", options =>
+                {
+                    options.Authority = "https://login.microsoftonline.com/common";
+                    options.TokenValidationParameters = new TokenValidationParameters { ValidateIssuer = false };
+                    options.ClientId = "4de9ae1b-3487-4df1-abe0-782849f07985";
+                    options.ClientSecret = "Ww2_@Wz/]Vt0KZmSTSbLdzfbR3pU2]sH";
+                    options.ResponseType = OpenIdConnectResponseType.Code;
+                    options.CallbackPath = "/signin-aad";
+                    options.RemoteSignOutPath = "/signout-aad";
+                    options.SignedOutCallbackPath = "/signout-callback-aad";
+                    //options.Prompt = "admin_consent";
+                    options.Events = new OpenIdConnectEvents
+                    {
+                        OnAccessDenied = (context) =>
+                        {
+                            //context.Response.Redirect(ConfigManager.AppUrls.GetAADAccessDeniedRedirectUrl(context));
+                            context.HandleResponse();
+                            return Task.FromResult(0);
+                        }
+                    };
+                });
+        }
+
+        public static void AddGoogle(this IServiceCollection services)
 		{
 			services.AddAuthentication()
 				.AddGoogle(options =>

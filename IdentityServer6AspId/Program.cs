@@ -1,8 +1,11 @@
-﻿using IdentityServer6AspId;
+using IdentityServer6AspId;
 using IdentityServer6AspId.Data;
+using IdentityServer6AspId.Models;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.SystemConsole.Themes;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
@@ -16,38 +19,39 @@ Log.Logger = new LoggerConfiguration()
 
 Log.Information("Starting up");
 
+
 try
 {
-	var builder = WebApplication.CreateBuilder(args);
+    var builder = WebApplication.CreateBuilder(args);
 
-	builder.Host.UseSerilog((ctx, lc) => lc
-		.WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}")
-		.Enrich.FromLogContext()
-		.ReadFrom.Configuration(ctx.Configuration));
+    builder.Host.UseSerilog((ctx, lc) => lc
+        .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}")
+        .Enrich.FromLogContext()
+        .ReadFrom.Configuration(ctx.Configuration));
 
-	
+
     var app = builder
-		.ConfigureServices()
-		.ConfigurePipeline();
+        .ConfigureServices()
+        .ConfigurePipeline();
 
-	//SeedData.SeedUsers(app);
-	//SeedData.SeedClients(app);
-	//SeedData.SeedResources(app);
-	//SeedData.SeedIdentityResources(app);
+    //SeedData.SeedUsers(app);
+    //SeedData.SeedClients(app);
+    //SeedData.SeedResources(app);
+    //SeedData.SeedIdentityResources(app);
 
 
-	app.Run();
+    app.Run();
 }
 catch (Exception ex) when (
-	// https://github.com/dotnet/runtime/issues/60600
-	ex.GetType().Name is not "StopTheHostException"
-	&& ex.GetType().Name is not "HostAbortedException"
+    // https://github.com/dotnet/runtime/issues/60600
+    ex.GetType().Name is not "StopTheHostException"
+    && ex.GetType().Name is not "HostAbortedException"
 )
 {
-	Log.Fatal(ex, "Unhandled exception");
+    Log.Fatal(ex, "Unhandled exception");
 }
 finally
 {
-	Log.Information("Shut down complete");
-	Log.CloseAndFlush();
+    Log.Information("Shut down complete");
+    Log.CloseAndFlush();
 }
