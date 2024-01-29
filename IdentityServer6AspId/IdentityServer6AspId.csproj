@@ -6,27 +6,47 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Areas\Identity\Pages\Account\ConfirmEmail.cshtml.cs" />
+	  <Compile Remove="Areas\Identity\Pages\Account\ConfirmEmailChange.cshtml.cs" />
+	  <Compile Remove="Areas\Identity\Pages\Account\ForgotPassword.cshtml.cs" />
+	  <Compile Remove="Areas\Identity\Pages\Account\ForgotPasswordConfirmation.cshtml.cs" />
+	  <Compile Remove="Areas\Identity\Pages\Account\Login.cshtml.cs" />
+	  <Compile Remove="Areas\Identity\Pages\Account\Logout.cshtml.cs" />
+	  <Compile Remove="Areas\Identity\Pages\Account\ResendEmailConfirmation.cshtml.cs" />
+	  <Compile Remove="Areas\Identity\Pages\Account\ResetPassword.cshtml.cs" />
 	  <Compile Remove="Config.cs" />
 	  <Compile Remove="SeedData.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Content Remove="Areas\Identity\Pages\Account\ConfirmEmail.cshtml" />
+	  <Content Remove="Areas\Identity\Pages\Account\ConfirmEmailChange.cshtml" />
+	  <Content Remove="Areas\Identity\Pages\Account\ForgotPassword.cshtml" />
+	  <Content Remove="Areas\Identity\Pages\Account\ForgotPasswordConfirmation.cshtml" />
+	  <Content Remove="Areas\Identity\Pages\Account\Login.cshtml" />
+	  <Content Remove="Areas\Identity\Pages\Account\Logout.cshtml" />
+	  <Content Remove="Areas\Identity\Pages\Account\ResendEmailConfirmation.cshtml" />
+	  <Content Remove="Areas\Identity\Pages\Account\ResetPassword.cshtml" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="Duende.IdentityServer.AspNetIdentity" Version="6.3.2" />
 		<PackageReference Include="Duende.IdentityServer.EntityFramework" Version="6.3.3" />
+		<PackageReference Include="IdentityExpress.Identity" Version="6.0.0" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="6.0.0" />
 
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.23" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.26" />
 
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.23" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.26" />
 
 		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.16" />
 		<PackageReference Include="Serilog.AspNetCore" Version="6.0.0" />
 
 		<PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.23" />
-		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.23" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.23">
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.26" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.26" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.26">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

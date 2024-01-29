@@ -1,4 +1,5 @@
-﻿using Duende.IdentityServer.Configuration;
+﻿using System.Security.Claims;
+using Duende.IdentityServer.Configuration;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.ResponseHandling;
 using Duende.IdentityServer.Services;
@@ -22,7 +23,19 @@ namespace IdentityServer6AspId.Services
             if (response.IsConsent || response.IsLogin || response.IsError)
                 return response;
 
-            if (!request?.Subject?.HasClaim(c => c.Type == "tenant_id" ) ?? false)
+
+            var amr = request.Subject.FindFirst("amr");
+
+            if (amr.Value == "external")
+            {
+                return new InteractionResponse();
+            }
+
+            if (!request?.Subject?.HasClaim(c => c.Type == "tenant_id") ?? false)
+
+                //var amr = request?.Subject?.Claims?.FirstOrDefault(claim => claim.Type == "amr") ?? new Claim("", "");
+
+
                 return new InteractionResponse
                 {
                     RedirectUrl = "/Account/Tenant"

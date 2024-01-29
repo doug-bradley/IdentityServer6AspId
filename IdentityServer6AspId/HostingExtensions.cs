@@ -26,7 +26,7 @@ namespace IdentityServer6AspId
 				options.AddPolicy("AllowSpecificOrigin",
 					b =>
 					{
-						b.WithOrigins("http://localhost:1234") // Replace with your Vue.js application's origin
+						b.WithOrigins("http://localhost:3000") // Replace with your Vue.js application's origin
 							.AllowAnyHeader()
 							.AllowAnyMethod()
 							.AllowCredentials();
@@ -38,22 +38,33 @@ namespace IdentityServer6AspId
 
 			builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
+            //builder.Services.AddDefaultIdentity<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
+            //    .AddEntityFrameworkStores<ApplicationDbContext>();
+
 			builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();
 
-            builder.Services.AddSingleton<IEmailSender, EmailSender>();
+			builder.Services.AddSingleton<IEmailSender, EmailSender>();
 			builder.Services.AddTransient<IUserService, UserService>();
 
-			builder.Services
+
+
+
+            builder.Services
 				.AddIdentityServer(options =>
 				{
 					options.Events.RaiseErrorEvents = true;
 					options.Events.RaiseInformationEvents = true;
 					options.Events.RaiseFailureEvents = true;
 					options.Events.RaiseSuccessEvents = true;
-					options.Csp = new CspOptions() { Level = CspLevel.One };
-					// see https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/
+					options.Csp = new()
+                    {
+                        Level = CspLevel.One,
+                        AddDeprecatedHeader = false
+                    };
+
+                    // see https://docs.duendesoftware.com/identityserver/v6/fundamentals/resources/
 					options.EmitStaticAudienceClaim = true;
 				})
 				.AddConfigurationStore(options =>
@@ -66,7 +77,7 @@ namespace IdentityServer6AspId
 				})
 				.AddAspNetIdentity<ApplicationUser>()
 				.AddProfileService<CustomProfileService>()
-                .AddAuthorizeInteractionResponseGenerator<TenantInteractionResponseGenerator>();
+				.AddAuthorizeInteractionResponseGenerator<TenantInteractionResponseGenerator>();
 
             builder.Services.AddAAD();
            
@@ -88,13 +99,20 @@ namespace IdentityServer6AspId
 			app.UseRouting();
 			app.UseCors("AllowSpecificOrigin"); // Use the CORS policy
 
+
 			app.Use(async (context, next) =>
 			{
-				context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; connect-src 'self' wss://localhost:*; script-src https://localhost:5001 'self'  'sha256-fa5rxHhZ799izGRP38+h4ud5QXNT0SFaFlh4eqDumBI=';");
+				var csp = "default-src 'self'; object-src 'none'; frame-ancestors 'https://localhost:5001'; sandbox allow-forms allow-same-origin allow-scripts; base-uri 'self';";
+                csp = "default-src 'self'; connect-src 'self' wss://localhost:*; script-src http://localhost:3000 https://localhost:5001 'self'  'sha256-fa5rxHhZ799izGRP38+h4ud5QXNT0SFaFlh4eqDumBI=';";
+
+                context.Response.Headers.Add("Content-Security-Policy", csp);
 				await next();
 			});
-			
-			app.UseIdentityServer();
+
+			// used by asp id
+            //app.UseAuthentication();
+            
+            app.UseIdentityServer();
 			app.UseAuthorization();
 			app.MapRazorPages().RequireAuthorization();
 			return app;
@@ -137,8 +155,8 @@ namespace IdentityServer6AspId
 					// register your IdentityServer with Google at https://console.developers.google.com
 					// enable the Google+ API
 					// set the redirect URI to https://localhost:5001/signin-google
-					options.ClientId = "copy client ID from Google here";
-					options.ClientSecret = "copy client secret from Google here";
+					options.ClientId = "859102510431-dniff4r06l5vv12hahbo09qnlc08fgjc.apps.googleusercontent.com";
+					options.ClientSecret = "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";
 				});
 		}
 	}

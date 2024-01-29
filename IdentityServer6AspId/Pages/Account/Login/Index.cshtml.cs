@@ -125,8 +125,21 @@ namespace IdentityServer6AspId.Pages.Login
 						throw new Exception("invalid return URL");
 					}
 				}
-
-				await _events.RaiseAsync(new UserLoginFailureEvent(Input.Username, "invalid credentials", clientId: context?.Client.ClientId));
+                if (result.RequiresTwoFactor)
+                {
+                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = Input.ReturnUrl, RememberMe = Input.RememberLogin });
+                }
+                if (result.IsLockedOut)
+                {
+                    //_logger.LogWarning("User account locked out.");
+                    return RedirectToPage("./Lockout");
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    return Page();
+                }
+                await _events.RaiseAsync(new UserLoginFailureEvent(Input.Username, "invalid credentials", clientId: context?.Client.ClientId));
 				ModelState.AddModelError(string.Empty, LoginOptions.InvalidCredentialsErrorMessage);
 			}
 
